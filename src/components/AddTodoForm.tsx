@@ -1,37 +1,68 @@
-import { useState, type FormEvent } from 'react'
+import { useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
 
 interface Props {
   onAdd: (description: string) => Promise<void> | void
   disabled?: boolean
 }
 
+const isMac =
+  typeof navigator !== 'undefined' &&
+  /Mac|iPhone|iPad|iPod/.test(navigator.platform)
+
 function AddTodoForm({ onAdd, disabled }: Props) {
   const [value, setValue] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault()
+  async function commit(keepFocus: boolean) {
     const trimmed = value.trim()
     if (!trimmed || submitting) return
     setSubmitting(true)
     try {
       await onAdd(trimmed)
       setValue('')
+      if (keepFocus) inputRef.current?.focus()
     } finally {
       setSubmitting(false)
     }
   }
 
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault()
+    await commit(false)
+  }
+
+  async function handleKey(e: KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault()
+      await commit(true)
+    }
+  }
+
   return (
     <form className="add-todo-form" onSubmit={handleSubmit}>
+      <span className="add-todo-form-plus" aria-hidden>
+        +
+      </span>
       <input
+        ref={inputRef}
         type="text"
-        placeholder="Add a todo..."
+        placeholder="add a task..."
         value={value}
         onChange={(e) => setValue(e.target.value)}
+        onKeyDown={handleKey}
         disabled={disabled || submitting}
+        aria-label="New task"
       />
-      <button type="submit" disabled={disabled || submitting || !value.trim()}>
+      <span className="add-todo-form-hint" aria-hidden>
+        <kbd>{isMac ? '⌘' : 'Ctrl'}</kbd>
+        <kbd>↵</kbd>
+      </span>
+      <button
+        type="submit"
+        className="add-todo-form-submit"
+        disabled={disabled || submitting || !value.trim()}
+      >
         Add
       </button>
     </form>
