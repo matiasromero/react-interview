@@ -23,6 +23,21 @@ export function createList(name: string): Promise<TodoList> {
   })
 }
 
+export function getList(id: number): Promise<TodoList> {
+  return request(`/api/todolists/${id}`)
+}
+
+export function updateList(id: number, name: string): Promise<TodoList> {
+  return request(`/api/todolists/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify({ name }),
+  })
+}
+
+export function deleteList(id: number): Promise<void> {
+  return request(`/api/todolists/${id}`, { method: 'DELETE' })
+}
+
 export function getItems(listId: number): Promise<TodoListItem[]> {
   return request(`/api/todolists/${listId}/items`)
 }
