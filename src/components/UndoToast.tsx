@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from 'motion/react'
 import type { UndoToastState } from '../hooks/useUndoToast'
+import { useT } from '../i18n/I18nContext'
 
 interface Props {
   toast: UndoToastState | null
@@ -7,6 +8,7 @@ interface Props {
 }
 
 function UndoToast({ toast, onUndo }: Props) {
+  const { t } = useT()
   return (
     <AnimatePresence>
       {toast && (
@@ -24,7 +26,7 @@ function UndoToast({ toast, onUndo }: Props) {
           </span>
           <span className="undo-toast-label">{toast.label}</span>
           <button type="button" className="undo-toast-action" onClick={onUndo}>
-            Undo
+            {t('undo.button')}
           </button>
           <motion.span
             className="undo-toast-progress"

@@ -4,6 +4,7 @@ import type { TodoList, TodoListItem } from '../api/types'
 import TodoItemRow from './TodoItemRow'
 import AddTodoForm from './AddTodoForm'
 import { getPastelForList, pastelStyleVars } from '../design/palette'
+import { useT } from '../i18n/I18nContext'
 
 interface Props {
   list: TodoList
@@ -28,6 +29,7 @@ function ActiveListPanel({
   autoFocusInput,
   onAutoFocusConsumed,
 }: Props) {
+  const { t } = useT()
   const pastel = getPastelForList(list.id)
   const total = items.length
   const done = items.filter((i) => i.isCompleted).length
@@ -113,24 +115,26 @@ function ActiveListPanel({
                 onChange={(e) => setDraftName(e.target.value)}
                 onBlur={commitEdit}
                 onKeyDown={handleKey}
-                aria-label="Rename list"
+                aria-label={t('listCard.renameAria')}
               />
             ) : (
               <h2
                 className="active-panel-title"
                 onDoubleClick={startEdit}
-                title="Double-click to rename"
+                title={t('listCard.dblClickHint')}
               >
                 {list.name}
               </h2>
             )}
             <p className="active-panel-subtitle">
               {total === 0 ? (
-                'no tasks yet'
+                t('activePanel.noTasks')
               ) : (
                 <>
-                  <span className="active-panel-num">{done}</span> of{' '}
-                  <span className="active-panel-num">{total}</span> done
+                  <span className="active-panel-num">{done}</span>{' '}
+                  {t('activePanel.doneOfConnector')}{' '}
+                  <span className="active-panel-num">{total}</span>{' '}
+                  {t('activePanel.doneSuffix')}
                 </>
               )}
             </p>
@@ -141,8 +145,8 @@ function ActiveListPanel({
               type="button"
               className="icon-btn"
               onClick={startEdit}
-              aria-label={`Rename list ${list.name}`}
-              title="Rename (or double-click title)"
+              aria-label={t('activePanel.renameAriaName', { name: list.name })}
+              title={t('activePanel.renameTitle')}
             >
               <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden>
                 <path
@@ -155,8 +159,8 @@ function ActiveListPanel({
               type="button"
               className="icon-btn icon-btn-danger"
               onClick={onDeleteList}
-              aria-label={`Delete list ${list.name}`}
-              title="Delete list"
+              aria-label={t('activePanel.deleteAriaName', { name: list.name })}
+              title={t('activePanel.deleteTitle')}
             >
               <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden>
                 <path
@@ -185,8 +189,8 @@ function ActiveListPanel({
             <span className="active-panel-empty-glyph" aria-hidden>
               ✸
             </span>
-            <p>all clear</p>
-            <p className="active-panel-empty-sub">add your first task above</p>
+            <p>{t('activePanel.allClear')}</p>
+            <p className="active-panel-empty-sub">{t('activePanel.addFirst')}</p>
           </div>
         ) : (
           <ul className="todo-rows">

@@ -7,9 +7,11 @@ import ListsBoard from './components/ListsBoard'
 import ActiveListPanel from './components/ActiveListPanel'
 import UndoToast from './components/UndoToast'
 import { useUndoToast } from './hooks/useUndoToast'
+import { useT } from './i18n/I18nContext'
 import './App.css'
 
 function App() {
+  const { t } = useT()
   const [lists, setLists] = useState<TodoList[]>([])
   const [itemsByList, setItemsByList] = useState<Record<number, TodoListItem[]>>({})
   const [selectedId, setSelectedId] = useState<number | null>(null)
@@ -17,6 +19,10 @@ function App() {
   const [loading, setLoading] = useState(true)
   const [bootError, setBootError] = useState<string | null>(null)
   const undo = useUndoToast()
+
+  useEffect(() => {
+    document.title = t('app.title')
+  }, [t])
 
   useEffect(() => {
     let cancelled = false
@@ -87,7 +93,7 @@ function App() {
     if (id === selectedId) setSelectedId(nextSelected)
 
     undo.schedule({
-      label: `Deleted “${target.name}”`,
+      label: t('undo.deletedList', { name: target.name }),
       commit: async () => {
         try {
           await api.deleteList(id)
@@ -167,7 +173,7 @@ function App() {
     }))
 
     undo.schedule({
-      label: `Deleted “${item.description}”`,
+      label: t('undo.deletedItem', { description: item.description }),
       commit: async () => {
         try {
           await api.deleteItem(listId, item.id)
@@ -240,8 +246,8 @@ function App() {
                 <span className="empty-shell-glyph" aria-hidden>
                   ✿
                 </span>
-                <p className="empty-shell-title">no lists yet</p>
-                <p className="empty-shell-sub">start with one above</p>
+                <p className="empty-shell-title">{t('empty.noLists')}</p>
+                <p className="empty-shell-sub">{t('empty.startWithOne')}</p>
               </section>
             )}
           </LayoutGroup>

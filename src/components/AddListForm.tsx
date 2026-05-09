@@ -1,5 +1,6 @@
 import { useState, type FormEvent, type KeyboardEvent } from 'react'
 import { motion } from 'motion/react'
+import { useT } from '../i18n/I18nContext'
 
 interface Props {
   onAdd: (name: string) => Promise<void> | void
@@ -7,6 +8,7 @@ interface Props {
 }
 
 function AddListForm({ onAdd, disabled }: Props) {
+  const { t } = useT()
   const [value, setValue] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [active, setActive] = useState(false)
@@ -43,14 +45,14 @@ function AddListForm({ onAdd, disabled }: Props) {
       onSubmit={handleSubmit}
       whileHover={{ y: -2 }}
       transition={{ type: 'spring', stiffness: 320, damping: 28 }}
-      aria-label="Create a new list"
+      aria-label={t('addList.aria')}
     >
       <span className="add-list-card-plus" aria-hidden>
         +
       </span>
       <input
         type="text"
-        placeholder="new list"
+        placeholder={t('addList.placeholder')}
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onFocus={() => setActive(true)}
@@ -59,13 +61,13 @@ function AddListForm({ onAdd, disabled }: Props) {
         }}
         onKeyDown={handleKey}
         disabled={disabled || submitting}
-        aria-label="New list name"
+        aria-label={t('addList.nameAria')}
       />
       <button
         type="submit"
         className="add-list-card-submit"
         disabled={disabled || submitting || !value.trim()}
-        aria-label="Create list"
+        aria-label={t('addList.submit')}
       >
         ↵
       </button>

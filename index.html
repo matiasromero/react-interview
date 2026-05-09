@@ -18,6 +18,17 @@
     />
   </head>
   <body>
+    <script>
+      // Anti-flash: apply persisted theme/lang to <html> before React hydrates.
+      (function () {
+        try {
+          var t = localStorage.getItem('theme')
+          if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t
+          var l = localStorage.getItem('lang')
+          if (l === 'es' || l === 'en') document.documentElement.lang = l
+        } catch (e) {}
+      })()
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

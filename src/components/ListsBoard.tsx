@@ -2,6 +2,7 @@ import { motion } from 'motion/react'
 import type { TodoList, TodoListItem } from '../api/types'
 import ListCard from './ListCard'
 import AddListForm from './AddListForm'
+import { useT } from '../i18n/I18nContext'
 
 interface Props {
   lists: TodoList[]
@@ -20,11 +21,12 @@ function ListsBoard({
   onAddList,
   onRenameList,
 }: Props) {
+  const { t } = useT()
   return (
-    <section className="lists-board" aria-label="Your lists">
+    <section className="lists-board" aria-label={t('lists.aria')}>
       <div className="lists-board-header">
-        <h2 className="section-eyebrow">Your lists</h2>
-        <span className="section-hint">double-click a card to rename</span>
+        <h2 className="section-eyebrow">{t('lists.heading')}</h2>
+        <span className="section-hint">{t('lists.hint')}</span>
       </div>
 
       <motion.div

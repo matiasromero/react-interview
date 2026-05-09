@@ -61,9 +61,12 @@
 
 /* ─────────────────────────────────────────────
    tokens · dark
+   Applied when:
+   - System prefers dark AND no explicit override (data-theme not 'light')
+   - User explicitly chose dark (data-theme="dark")
    ───────────────────────────────────────────── */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     --bg: #14111c;
     --bg-elevated: rgba(255, 255, 255, 0.04);
     --bg-elevated-strong: rgba(255, 255, 255, 0.06);
@@ -103,6 +106,47 @@
 
     --grain-opacity: 0.07;
   }
+}
+
+:root[data-theme='dark'] {
+  --bg: #14111c;
+  --bg-elevated: rgba(255, 255, 255, 0.04);
+  --bg-elevated-strong: rgba(255, 255, 255, 0.06);
+  --ink: #f0ebf5;
+  --ink-soft: #b0a8c0;
+  --ink-mute: #6e667d;
+  --border: rgba(240, 235, 245, 0.08);
+  --border-strong: rgba(240, 235, 245, 0.16);
+
+  --pastel-lavender-bg: #2d2647;
+  --pastel-lavender-ink: #c4b9f0;
+  --pastel-lavender-tint: rgba(143, 122, 240, 0.30);
+
+  --pastel-peach-bg: #3d2b25;
+  --pastel-peach-ink: #ffb89e;
+  --pastel-peach-tint: rgba(255, 145, 110, 0.30);
+
+  --pastel-mint-bg: #1f3329;
+  --pastel-mint-ink: #9fe4bc;
+  --pastel-mint-tint: rgba(95, 200, 140, 0.30);
+
+  --pastel-sky-bg: #1f2d3d;
+  --pastel-sky-ink: #a8c8f0;
+  --pastel-sky-tint: rgba(120, 168, 240, 0.30);
+
+  --pastel-lemon-bg: #3a3322;
+  --pastel-lemon-ink: #f0dc8c;
+  --pastel-lemon-tint: rgba(232, 200, 90, 0.30);
+
+  --pastel-rose-bg: #3a2530;
+  --pastel-rose-ink: #f0a8c0;
+  --pastel-rose-tint: rgba(232, 130, 168, 0.30);
+
+  --accent: #ff8a7e;
+  --accent-ink: #1a0f0c;
+  --danger: #ff7269;
+
+  --grain-opacity: 0.07;
 }
 
 /* ─────────────────────────────────────────────
@@ -180,9 +224,13 @@ input {
 }
 
 @media (prefers-color-scheme: dark) {
-  .app-grain {
+  :root:not([data-theme='light']) .app-grain {
     mix-blend-mode: screen;
   }
+}
+
+:root[data-theme='dark'] .app-grain {
+  mix-blend-mode: screen;
 }
 
 .app {
@@ -241,6 +289,44 @@ input {
   letter-spacing: 0.02em;
   color: var(--ink-soft);
   text-transform: lowercase;
+}
+
+.masthead-end {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.masthead-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.masthead-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-pill);
+  color: var(--ink);
+  background: color-mix(in oklab, var(--ink) 8%, transparent);
+  font-size: 16px;
+  line-height: 1;
+  transition: background 0.2s var(--ease), transform 0.2s var(--ease);
+}
+
+.masthead-btn:hover {
+  background: color-mix(in oklab, var(--ink) 16%, transparent);
+  transform: translateY(-1px);
+}
+
+.masthead-btn-text {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
 }
 
 /* ─────────────────────────────────────────────

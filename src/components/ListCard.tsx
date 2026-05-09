@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { motion } from 'motion/react'
 import type { TodoList, TodoListItem } from '../api/types'
 import { getPastelForList, pastelStyleVars } from '../design/palette'
+import { useT } from '../i18n/I18nContext'
 
 interface Props {
   list: TodoList
@@ -12,6 +13,7 @@ interface Props {
 }
 
 function ListCard({ list, items, active, onSelect, onRename }: Props) {
+  const { t } = useT()
   const pastel = getPastelForList(list.id)
   const total = items.length
   const done = items.filter((i) => i.isCompleted).length
@@ -75,7 +77,7 @@ function ListCard({ list, items, active, onSelect, onRename }: Props) {
       whileTap={{ scale: 0.98 }}
       transition={{ type: 'spring', stiffness: 320, damping: 28 }}
       aria-pressed={active}
-      aria-label={`Open list ${list.name}`}
+      aria-label={t('listCard.openAria', { name: list.name })}
     >
       <span className="list-card-meta">
         <span className="list-card-dot" aria-hidden />
@@ -93,10 +95,10 @@ function ListCard({ list, items, active, onSelect, onRename }: Props) {
           onBlur={commitEdit}
           onClick={(e) => e.stopPropagation()}
           onKeyDown={onKey}
-          aria-label="Rename list"
+          aria-label={t('listCard.renameAria')}
         />
       ) : (
-        <span className="list-card-name" title="Double-click to rename">
+        <span className="list-card-name" title={t('listCard.dblClickHint')}>
           {list.name}
         </span>
       )}

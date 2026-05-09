@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
+import { useT } from '../i18n/I18nContext'
 
 interface Props {
   onAdd: (description: string) => Promise<void> | void
@@ -12,6 +13,7 @@ const isMac =
   /Mac|iPhone|iPad|iPod/.test(navigator.platform)
 
 function AddTodoForm({ onAdd, disabled, autoFocus, onAutoFocused }: Props) {
+  const { t } = useT()
   const [value, setValue] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -56,12 +58,12 @@ function AddTodoForm({ onAdd, disabled, autoFocus, onAutoFocused }: Props) {
       <input
         ref={inputRef}
         type="text"
-        placeholder="add a task..."
+        placeholder={t('addTodo.placeholder')}
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={handleKey}
         disabled={disabled || submitting}
-        aria-label="New task"
+        aria-label={t('addTodo.aria')}
       />
       <span className="add-todo-form-hint" aria-hidden>
         <kbd>{isMac ? '⌘' : 'Ctrl'}</kbd>
@@ -72,7 +74,7 @@ function AddTodoForm({ onAdd, disabled, autoFocus, onAutoFocused }: Props) {
         className="add-todo-form-submit"
         disabled={disabled || submitting || !value.trim()}
       >
-        Add
+        {t('addTodo.submit')}
       </button>
     </form>
   )

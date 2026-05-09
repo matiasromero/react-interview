@@ -1,12 +1,9 @@
-function formatDate(d: Date): string {
-  const weekday = d.toLocaleDateString('en-US', { weekday: 'short' })
-  const month = d.toLocaleDateString('en-US', { month: 'short' })
-  const day = d.getDate()
-  const year = d.getFullYear()
-  return `${weekday} · ${month} ${day} · ${year}`
-}
+import { useT } from '../i18n/I18nContext'
+import ThemeToggle from './ThemeToggle'
+import LangToggle from './LangToggle'
 
 function Header() {
+  const { formatDate, t } = useT()
   const today = formatDate(new Date())
   return (
     <header className="masthead">
@@ -18,8 +15,14 @@ function Header() {
           <span className="masthead-wordmark-italic">to</span>dos
         </span>
       </div>
-      <div className="masthead-date" aria-label={`Today is ${today}`}>
-        {today}
+      <div className="masthead-end">
+        <div className="masthead-date" aria-label={t('header.todayIs', { date: today })}>
+          {today}
+        </div>
+        <div className="masthead-controls">
+          <ThemeToggle />
+          <LangToggle />
+        </div>
       </div>
     </header>
   )
