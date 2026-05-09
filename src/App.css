@@ -1,0 +1,148 @@
+:root {
+  color-scheme: light dark;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #f6f7f9;
+  color: #1f2933;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background: #14161a;
+    color: #e6e8eb;
+  }
+}
+
+.app {
+  max-width: 32rem;
+  margin: 4rem auto;
+  padding: 0 1rem;
+}
+
+.app h1 {
+  margin: 0 0 1.5rem;
+  font-size: 1.75rem;
+}
+
+.muted {
+  color: #6b7280;
+  font-style: italic;
+}
+
+.banner {
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.banner-error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+@media (prefers-color-scheme: dark) {
+  .banner-error {
+    background: #3f1f1f;
+    color: #fca5a5;
+  }
+}
+
+.add-todo-form {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.add-todo-form input[type='text'] {
+  flex: 1;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  background: white;
+  color: inherit;
+}
+
+@media (prefers-color-scheme: dark) {
+  .add-todo-form input[type='text'] {
+    background: #1f2329;
+    border-color: #2f343c;
+  }
+}
+
+.add-todo-form input[type='text']:focus {
+  outline: 2px solid #2563eb;
+  outline-offset: 1px;
+}
+
+.add-todo-form button {
+  padding: 0.6rem 1.25rem;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.add-todo-form button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.todo-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.todo-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.5rem;
+  background: white;
+  border: 1px solid #e5e7eb;
+}
+
+@media (prefers-color-scheme: dark) {
+  .todo-row {
+    background: #1f2329;
+    border-color: #2f343c;
+  }
+}
+
+.todo-row-label {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+}
+
+.todo-row.completed .todo-row-label span {
+  text-decoration: line-through;
+  color: #9ca3af;
+}
+
+.todo-row-delete {
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 0.25rem;
+}
+
+.todo-row-delete:hover {
+  color: #ef4444;
+}
