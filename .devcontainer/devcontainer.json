@@ -1,8 +1,17 @@
 {
-	"name": "Node.js & TypeScript",
+	"name": "react-interview",
 	"image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
-	"postCreateCommand": [
-		"bash",
-		"../.devcontainer/postCreate.sh"
-	]
+	"postCreateCommand": "bash .devcontainer/postCreate.sh",
+	"forwardPorts": [5173],
+	"portsAttributes": {
+		"5173": { "label": "Vite dev server", "onAutoForward": "notify" }
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"dbaeumer.vscode-eslint",
+				"esbenp.prettier-vscode"
+			]
+		}
+	}
 }
