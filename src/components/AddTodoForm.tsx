@@ -1,18 +1,27 @@
-import { useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react'
 
 interface Props {
   onAdd: (description: string) => Promise<void> | void
   disabled?: boolean
+  autoFocus?: boolean
+  onAutoFocused?: () => void
 }
 
 const isMac =
   typeof navigator !== 'undefined' &&
   /Mac|iPhone|iPad|iPod/.test(navigator.platform)
 
-function AddTodoForm({ onAdd, disabled }: Props) {
+function AddTodoForm({ onAdd, disabled, autoFocus, onAutoFocused }: Props) {
   const [value, setValue] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (autoFocus) {
+      inputRef.current?.focus()
+      onAutoFocused?.()
+    }
+  }, [autoFocus, onAutoFocused])
 
   async function commit(keepFocus: boolean) {
     const trimmed = value.trim()

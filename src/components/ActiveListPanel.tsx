@@ -13,6 +13,8 @@ interface Props {
   onDeleteItem: (item: TodoListItem) => void
   onRenameList: (name: string) => Promise<void> | void
   onDeleteList: () => void
+  autoFocusInput?: boolean
+  onAutoFocusConsumed?: () => void
 }
 
 function ActiveListPanel({
@@ -23,6 +25,8 @@ function ActiveListPanel({
   onDeleteItem,
   onRenameList,
   onDeleteList,
+  autoFocusInput,
+  onAutoFocusConsumed,
 }: Props) {
   const pastel = getPastelForList(list.id)
   const total = items.length
@@ -93,7 +97,6 @@ function ActiveListPanel({
   return (
     <motion.section
       layout
-      layoutId={`list-card-${list.id}`}
       className="active-panel"
       style={pastelStyleVars(pastel)}
       data-pastel={pastel.name}
@@ -165,7 +168,11 @@ function ActiveListPanel({
           </div>
         </header>
 
-        <AddTodoForm onAdd={handleAdd} />
+        <AddTodoForm
+          onAdd={handleAdd}
+          autoFocus={autoFocusInput}
+          onAutoFocused={onAutoFocusConsumed}
+        />
 
         {error && (
           <div className="banner banner-error" role="alert">

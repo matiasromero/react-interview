@@ -13,6 +13,7 @@ function App() {
   const [lists, setLists] = useState<TodoList[]>([])
   const [itemsByList, setItemsByList] = useState<Record<number, TodoListItem[]>>({})
   const [selectedId, setSelectedId] = useState<number | null>(null)
+  const [autoFocusListId, setAutoFocusListId] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
   const [bootError, setBootError] = useState<string | null>(null)
   const undo = useUndoToast()
@@ -49,6 +50,7 @@ function App() {
     setLists((prev) => [...prev, created])
     setItemsByList((prev) => ({ ...prev, [created.id]: [] }))
     setSelectedId(created.id)
+    setAutoFocusListId(created.id)
   }
 
   async function handleRenameList(id: number, name: string) {
@@ -230,6 +232,8 @@ function App() {
                 onDeleteItem={(item) => requestDeleteItem(selectedList.id, item)}
                 onRenameList={(name) => handleRenameList(selectedList.id, name)}
                 onDeleteList={() => requestDeleteList(selectedList.id)}
+                autoFocusInput={autoFocusListId === selectedList.id}
+                onAutoFocusConsumed={() => setAutoFocusListId(null)}
               />
             ) : (
               <section className="empty-shell">
