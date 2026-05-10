@@ -73,8 +73,6 @@ function ListCard({ list, items, active, onSelect, onRename }: Props) {
       data-pastel={pastel.name}
       onClick={() => onSelect(list.id)}
       onDoubleClick={startEdit}
-      whileHover={{ y: -2 }}
-      whileTap={{ scale: 0.98 }}
       transition={{ type: 'spring', stiffness: 320, damping: 28 }}
       aria-pressed={active}
       aria-label={t('listCard.openAria', { name: list.name })}

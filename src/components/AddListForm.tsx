@@ -1,5 +1,4 @@
 import { useState, type FormEvent, type KeyboardEvent } from 'react'
-import { motion } from 'motion/react'
 import { useT } from '../i18n/I18nContext'
 
 interface Props {
@@ -40,38 +39,42 @@ function AddListForm({ onAdd, disabled }: Props) {
   }
 
   return (
-    <motion.form
+    <form
       className={`add-list-card${active ? ' is-active' : ''}`}
       onSubmit={handleSubmit}
-      whileHover={{ y: -2 }}
-      transition={{ type: 'spring', stiffness: 320, damping: 28 }}
       aria-label={t('addList.aria')}
     >
-      <span className="add-list-card-plus" aria-hidden>
-        +
+      <span className="add-list-card-meta">
+        <span className="add-list-card-plus" aria-hidden>
+          +
+        </span>
       </span>
-      <input
-        type="text"
-        placeholder={t('addList.placeholder')}
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        onFocus={() => setActive(true)}
-        onBlur={() => {
-          if (!value.trim()) setActive(false)
-        }}
-        onKeyDown={handleKey}
-        disabled={disabled || submitting}
-        aria-label={t('addList.nameAria')}
-      />
-      <button
-        type="submit"
-        className="add-list-card-submit"
-        disabled={disabled || submitting || !value.trim()}
-        aria-label={t('addList.submit')}
-      >
-        ↵
-      </button>
-    </motion.form>
+      <span className="add-list-card-body">
+        <input
+          type="text"
+          placeholder={t('addList.placeholder')}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onFocus={() => setActive(true)}
+          onBlur={() => {
+            if (!value.trim()) setActive(false)
+          }}
+          onKeyDown={handleKey}
+          disabled={disabled || submitting}
+          aria-label={t('addList.nameAria')}
+        />
+      </span>
+      <span className="add-list-card-foot">
+        <button
+          type="submit"
+          className="add-list-card-submit"
+          disabled={disabled || submitting || !value.trim()}
+          aria-label={t('addList.submit')}
+        >
+          ↵
+        </button>
+      </span>
+    </form>
   )
 }
 

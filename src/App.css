@@ -364,9 +364,88 @@ input {
 }
 
 .lists-board-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 16px;
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  max-width: 1100px;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-card);
+  --card-tint: rgba(42, 36, 56, 0.18);
+  --card-min-w: 180px;
+  --add-card-w: 180px;
+}
+
+.lists-board-scroller {
+  flex: 1 1 auto;
+  min-width: 0;
+  position: relative;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklab, var(--ink) 22%, transparent) transparent;
+}
+
+.lists-board-scroller::-webkit-scrollbar {
+  height: 6px;
+}
+
+.lists-board-scroller::-webkit-scrollbar-thumb {
+  background: color-mix(in oklab, var(--ink) 22%, transparent);
+  border-radius: 999px;
+}
+
+.lists-board-scroller::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.lists-board-scroller::before,
+.lists-board-scroller::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 36px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.18s var(--ease);
+  z-index: 2;
+}
+
+.lists-board-scroller::before {
+  left: 0;
+  background: linear-gradient(to right, var(--bg-elevated), transparent);
+}
+
+.lists-board-scroller::after {
+  right: 0;
+  background: linear-gradient(to left, var(--bg-elevated), transparent);
+}
+
+.lists-board-scroller[data-can-scroll-left='true']::before,
+.lists-board-scroller[data-can-scroll-right='true']::after {
+  opacity: 1;
+}
+
+.lists-board-track {
+  display: flex;
+  min-width: 100%;
+}
+
+.list-card-slot {
+  flex: 1 0 var(--card-min-w);
+  min-width: 0;
+  display: flex;
+  scroll-snap-align: start;
+}
+
+.add-list-slot {
+  flex: 0 0 var(--add-card-w);
+  min-width: 0;
+  display: flex;
 }
 
 /* ─────────────────────────────────────────────
@@ -374,31 +453,42 @@ input {
    ───────────────────────────────────────────── */
 .list-card {
   position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 14px;
   padding: 18px 20px 16px;
   min-height: 132px;
   text-align: left;
-  border-radius: var(--r-md);
+  border: 0;
+  border-right: 1px solid color-mix(in oklab, var(--card-ink) 14%, transparent);
+  border-radius: 0;
   background: var(--card-bg);
   color: var(--card-ink);
-  border: 1px solid transparent;
-  box-shadow: var(--shadow-card);
-  transition: box-shadow 0.4s var(--ease), border-color 0.2s var(--ease);
+  box-shadow: none;
+  transition: background 0.2s var(--ease);
   cursor: pointer;
-  will-change: transform;
+}
+
+.lists-board-grid > *:last-child .list-card,
+.lists-board-grid > *:last-child .add-list-card {
+  border-right: 0;
 }
 
 .list-card:hover {
-  box-shadow: var(--shadow-card-hover);
+  background: color-mix(in oklab, var(--card-bg) 88%, white);
 }
 
-.list-card.is-active {
-  border-color: color-mix(in oklab, var(--card-ink) 30%, transparent);
-  box-shadow:
-    0 0 0 2px color-mix(in oklab, var(--card-ink) 14%, transparent),
-    var(--shadow-card-hover);
+.list-card.is-active::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  background: var(--card-ink);
+  opacity: 0.85;
+  pointer-events: none;
 }
 
 .list-card-meta {
@@ -488,32 +578,56 @@ input {
    ───────────────────────────────────────────── */
 .add-list-card {
   position: relative;
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 10px;
-  padding: 18px 20px;
+  flex: 1 1 0;
+  min-width: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 20px 16px;
   min-height: 132px;
-  border-radius: var(--r-md);
+  text-align: left;
+  border: 0;
+  border-right: 1px solid var(--border);
+  border-radius: 0;
   background: var(--bg-elevated);
-  border: 1.5px dashed var(--border-strong);
   color: var(--ink-soft);
   cursor: text;
-  transition: border-color 0.2s var(--ease), background 0.2s var(--ease);
+  transition: background 0.2s var(--ease), color 0.2s var(--ease);
 }
 
 .add-list-card:hover,
 .add-list-card.is-active {
-  border-color: color-mix(in oklab, var(--accent) 60%, var(--border-strong));
   background: var(--bg-elevated-strong);
   color: var(--ink);
 }
 
+.add-list-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
 .add-list-card-plus {
-  font-family: var(--font-display);
-  font-size: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-family: var(--font-mono);
+  font-size: 18px;
   line-height: 1;
   color: var(--accent);
+  background: color-mix(in oklab, var(--accent) 18%, transparent);
+}
+
+.add-list-card-body {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  min-width: 0;
 }
 
 .add-list-card input {
@@ -522,7 +636,9 @@ input {
   background: transparent;
   width: 100%;
   font-family: var(--font-display);
-  font-size: 22px;
+  font-style: italic;
+  font-size: 26px;
+  line-height: 1.05;
   letter-spacing: -0.01em;
   color: var(--ink);
 }
@@ -532,17 +648,24 @@ input {
   font-style: italic;
 }
 
+.add-list-card-foot {
+  margin-top: auto;
+  display: flex;
+  justify-content: flex-end;
+  min-height: 22px;
+}
+
 .add-list-card-submit {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   background: var(--accent);
   color: var(--accent-ink);
   font-family: var(--font-mono);
-  font-size: 16px;
+  font-size: 14px;
   transition: transform 0.2s var(--ease), opacity 0.2s var(--ease);
 }
 
@@ -552,7 +675,7 @@ input {
 }
 
 .add-list-card-submit:not(:disabled):hover {
-  transform: scale(1.06);
+  transform: scale(1.08);
 }
 
 /* ─────────────────────────────────────────────
@@ -1067,8 +1190,47 @@ input {
    ───────────────────────────────────────────── */
 @media (max-width: 720px) {
   .lists-board-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
+    flex-direction: column;
+    max-width: none;
+  }
+
+  .lists-board-scroller {
+    overflow-x: visible;
+    overflow-y: visible;
+    scroll-snap-type: none;
+  }
+
+  .lists-board-scroller::before,
+  .lists-board-scroller::after {
+    display: none;
+  }
+
+  .lists-board-track {
+    flex-direction: column;
+  }
+
+  .list-card-slot,
+  .add-list-slot {
+    flex: 1 1 auto;
+    max-width: none;
+  }
+
+  .list-card,
+  .add-list-card {
+    border-right: 0;
+    border-bottom: 1px solid color-mix(in oklab, var(--card-ink, var(--ink)) 14%, transparent);
+    min-height: 96px;
+  }
+
+  .lists-board-grid > *:last-child .list-card,
+  .lists-board-grid > *:last-child .add-list-card {
+    border-bottom: 0;
+  }
+
+  .list-card.is-active::before {
+    inset: 0 auto 0 0;
+    width: 3px;
+    height: auto;
   }
 
   .add-todo-form {
