@@ -56,7 +56,7 @@ A naive "refetch and replace" would stomp on optimistic UI. The merge layer (`sr
 - Items / lists currently being updated locally — fields the user just touched (`isCompleted`, `description`, `name`) are kept from local state until the PUT resolves.
 - Items / lists in the 5 s undo window after a delete — they are dropped from the server response so the broadcast doesn't resurrect them mid-undo.
 
-### Files involved
+### Files involved (realtime)
 
 - `src/api/hub.ts` — `HubConnection` factory with auto-reconnect schedule.
 - `src/hooks/useTodoSyncHub.ts` — connection lifecycle, dedupe, exposes `ConnectionState`.
@@ -66,6 +66,63 @@ A naive "refetch and replace" would stomp on optimistic UI. The merge layer (`sr
 - `vite.config.ts` — `/hubs` proxy with `ws: true`.
 
 For the full backend contract see `docs/realtime-frontend-integration.md` in the `dotnet-interview` repo.
+
+## External sync (background worker)
+
+In addition to local persistence + SignalR fan-out, the backend mirrors every list and item to a third-party service. A worker on the API side reads from an **outbox** table and pushes/pulls changes on a fixed interval. When the third-party service is unreachable, changes pile up in the outbox — the frontend gives that pipeline visibility and lets you trigger a run on demand.
+
+### Endpoints
+
+- `GET /api/sync/status` → `SyncStatusResponse`
+  - `lastRuns: SyncRunSummary[]` — one entry per (`entityType` × `direction`): four combinations (`List`/`Item` × `Push`/`Pull`) with `startedAt`, `finishedAt`, `status`, `itemsProcessed`, `itemsFailed`, `error`.
+  - `pendingOutboxCount` — local changes queued for the next push.
+  - `oldestPendingOutboxOccurredAt` — timestamp of the oldest pending entry (used to detect a stale outbox).
+  - `config` — `interval`, `enabled`, `outboxBatchSize`, etc.
+- `POST /api/sync/run` → `SyncRunResponse` with `listPush`, `itemPush`, `listPull`, `itemPull` (each: `total`, `pushed`, `failed`, `status`).
+
+The numeric enums returned by the API:
+
+- `SyncEntityType`: `1` = List, `2` = Item.
+- `SyncDirection`: `1` = Push, `2` = Pull.
+- `SyncRunStatus`: `1` = Running, `2` = Succeeded, `3` = PartialFailure, `4` = Failed.
+
+### How the frontend consumes it
+
+- The hook `useSyncStatus` exposes `status`, `runState`, `refresh()` and `runNow()` without any background polling.
+- The `SyncIndicator` component renders a pill in the header and a popover.
+- Refresh policy: on mount, on popover open, after a manual run, and after every SignalR notification (`onListChanged`, `onItemChanged`, `onResync`). No polling — the pill stays current by leveraging the realtime channel that already runs.
+
+### Header indicator (pill)
+
+A small refresh glyph (↻) next to `ConnectionIndicator`. It rotates while a manual run is in flight, and shows a numeric badge when `pendingOutboxCount > 0`. The pill background changes tone:
+
+- **mint** (`ok`) — all runs OK, outbox empty.
+- **peach** (`warn`) — `pendingOutboxCount > 0` or some run finished in `PartialFailure`.
+- **rose** (`error`) — at least one `Failed` run, or the oldest pending entry is older than 5 minutes.
+- **sky** (`busy`) — manual run in flight.
+- **grey** (`muted`) — no data yet, fetch failed, or `config.enabled === false`.
+
+### Popover
+
+- Summary: `Last synced …` + outbox state (`All changes synced` / `N changes waiting to sync`).
+- 2×2 grid (rows `Lists` / `Tasks`, columns `Push` / `Pull`). Each cell shows:
+  - Status glyph: `✓` Succeeded, `⚠` PartialFailure, `✕` Failed, `⏳` Running, `—` no data.
+  - Counts `processed / failed` mapped from `itemsProcessed / itemsFailed`.
+  - Native `title` with the backend `error` message when present.
+- **Sync now** button → `POST /api/sync/run`, disabled while a run is in flight.
+- Footer with the auto-sync cadence (`auto every 1 min`) or `Background sync is off` when `config.enabled === false`.
+- **`?` help toggle** in the header → expands an inline guide that documents push/pull, the status glyphs, the counts format, and the pill colors. Translated via the i18n layer (`sync.help.*`).
+
+### Files involved (external sync)
+
+- `src/api/client.ts` — `getSyncStatus()`, `runSync()`.
+- `src/api/types.ts` — `SyncStatusResponse`, `SyncRunResponse` and friends.
+- `src/hooks/useSyncStatus.ts` — fetch + manual run, no background polling.
+- `src/components/SyncIndicator.tsx` — pill, popover, inline help panel.
+- `src/components/Header.tsx` — mounts the indicator next to `ConnectionIndicator`.
+- `src/App.tsx` — instantiates the hook and re-fetches status after every realtime event.
+- `src/App.css` — `.sync-*` classes (pill tones, popover, help).
+- `src/i18n/messages.ts` — `sync.*` and `sync.help.*` keys (en + es).
 
 ## Running without dev containers
 

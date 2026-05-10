@@ -14,6 +14,7 @@ import ActiveListPanel from './components/ActiveListPanel'
 import UndoToast from './components/UndoToast'
 import { useUndoToast } from './hooks/useUndoToast'
 import { useTodoSyncHub } from './hooks/useTodoSyncHub'
+import { useSyncStatus } from './hooks/useSyncStatus'
 import { useT } from './i18n/I18nContext'
 import './App.css'
 
@@ -225,6 +226,8 @@ function App() {
     })
   }
 
+  const sync = useSyncStatus()
+
   const connectionState = useTodoSyncHub({
     onListChanged: async (entityId, op) => {
       if (!bootstrappedRef.current) return
@@ -257,6 +260,7 @@ function App() {
       } catch (e) {
         console.error('[onListChanged] refetch failed', e)
       }
+      void sync.refresh()
     },
 
     onItemChanged: async (entityId, op) => {
@@ -276,6 +280,7 @@ function App() {
           }
           return mutated ? next : prev
         })
+        void sync.refresh()
         return
       }
 
@@ -296,6 +301,7 @@ function App() {
           } catch (e) {
             console.error('[onItemChanged] update refetch failed', e)
           }
+          void sync.refresh()
           return
         }
       }
@@ -328,6 +334,7 @@ function App() {
       } catch (e) {
         console.error('[onItemChanged] full refetch failed', e)
       }
+      void sync.refresh()
     },
 
     onResync: async () => {
@@ -359,6 +366,7 @@ function App() {
       } catch (e) {
         console.error('[onResync] failed', e)
       }
+      void sync.refresh()
     },
   })
 
@@ -372,7 +380,7 @@ function App() {
     <div className="app-shell">
       <div className="app-grain" aria-hidden />
       <main className="app">
-        <Header connectionState={connectionState} />
+        <Header connectionState={connectionState} sync={sync} />
 
         {bootError && (
           <div className="banner banner-error" role="alert">

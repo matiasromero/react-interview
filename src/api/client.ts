@@ -1,4 +1,4 @@
-import type { TodoList, TodoListItem } from './types'
+import type { SyncRunResponse, SyncStatusResponse, TodoList, TodoListItem } from './types'
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
   const res = await fetch(url, {
@@ -62,4 +62,12 @@ export function updateItem(
 
 export function deleteItem(listId: number, id: number): Promise<void> {
   return request(`/api/todolists/${listId}/items/${id}`, { method: 'DELETE' })
+}
+
+export function getSyncStatus(): Promise<SyncStatusResponse> {
+  return request('/api/sync/status')
+}
+
+export function runSync(): Promise<SyncRunResponse> {
+  return request('/api/sync/run', { method: 'POST' })
 }
