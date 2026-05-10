@@ -1085,6 +1085,39 @@ input {
 }
 
 /* ─────────────────────────────────────────────
+   connection indicator (Header dot)
+   ───────────────────────────────────────────── */
+.connection-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 4px;
+  border-radius: 50%;
+  background: var(--ink-mute);
+  transition: background 0.3s var(--ease), box-shadow 0.3s var(--ease);
+}
+
+.connection-dot[data-state='connected'] {
+  background: #5ab584;
+  box-shadow: 0 0 0 0 rgba(90, 181, 132, 0.4);
+}
+
+.connection-dot[data-state='connecting'],
+.connection-dot[data-state='reconnecting'] {
+  background: #d6a64a;
+  animation: connection-dot-pulse 1.4s var(--ease) infinite;
+}
+
+.connection-dot[data-state='disconnected'] {
+  background: var(--danger);
+}
+
+@keyframes connection-dot-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(214, 166, 74, 0.5); }
+  50%      { box-shadow: 0 0 0 5px rgba(214, 166, 74, 0); }
+}
+
+/* ─────────────────────────────────────────────
    reduced motion
    ───────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {

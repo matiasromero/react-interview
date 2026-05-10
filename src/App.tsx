@@ -1,14 +1,24 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { LayoutGroup } from 'motion/react'
 import * as api from './api/client'
 import type { TodoList, TodoListItem } from './api/types'
+import {
+  findParentListId,
+  mergeItemsByList,
+  mergeItemsForList,
+  mergeLists,
+} from './api/sync-merge'
 import Header from './components/Header'
 import ListsBoard from './components/ListsBoard'
 import ActiveListPanel from './components/ActiveListPanel'
 import UndoToast from './components/UndoToast'
 import { useUndoToast } from './hooks/useUndoToast'
+import { useTodoSyncHub } from './hooks/useTodoSyncHub'
 import { useT } from './i18n/I18nContext'
 import './App.css'
+
+const OP_UPDATE = 2
+const OP_DELETE = 3
 
 function App() {
   const { t } = useT()
@@ -19,6 +29,15 @@ function App() {
   const [loading, setLoading] = useState(true)
   const [bootError, setBootError] = useState<string | null>(null)
   const undo = useUndoToast()
+
+  const pendingDeletedItemIds = useRef<Set<number>>(new Set())
+  const pendingDeletedListIds = useRef<Set<number>>(new Set())
+  const inFlightItemUpdateIds = useRef<Set<number>>(new Set())
+  const inFlightListUpdateIds = useRef<Set<number>>(new Set())
+
+  const itemsByListRef = useRef(itemsByList)
+  const bootstrappedRef = useRef(false)
+  itemsByListRef.current = itemsByList
 
   useEffect(() => {
     document.title = t('app.title')
@@ -39,6 +58,7 @@ function App() {
         setLists(fetched)
         setItemsByList(map)
         setSelectedId(fetched[0]?.id ?? null)
+        bootstrappedRef.current = true
       } catch (e) {
         if (!cancelled) setBootError((e as Error).message)
       } finally {
@@ -61,6 +81,7 @@ function App() {
 
   async function handleRenameList(id: number, name: string) {
     const previousName = lists.find((l) => l.id === id)?.name
+    inFlightListUpdateIds.current.add(id)
     setLists((prev) => prev.map((l) => (l.id === id ? { ...l, name } : l)))
     try {
       const updated = await api.updateList(id, name)
@@ -72,6 +93,8 @@ function App() {
         )
       }
       throw e
+    } finally {
+      inFlightListUpdateIds.current.delete(id)
     }
   }
 
@@ -83,7 +106,7 @@ function App() {
     const nextSelected =
       id === selectedId ? remaining[0]?.id ?? null : selectedId
 
-    // optimistic remove
+    pendingDeletedListIds.current.add(id)
     setLists(remaining)
     setItemsByList((prev) => {
       const next = { ...prev }
@@ -98,15 +121,17 @@ function App() {
         try {
           await api.deleteList(id)
         } catch {
-          // restore on failure
           setLists((prev) => [...prev, target].sort((a, b) => a.id - b.id))
           setItemsByList((prev) => ({ ...prev, [id]: targetItems }))
+        } finally {
+          pendingDeletedListIds.current.delete(id)
         }
       },
       undo: () => {
         setLists((prev) => [...prev, target].sort((a, b) => a.id - b.id))
         setItemsByList((prev) => ({ ...prev, [id]: targetItems }))
         setSelectedId(target.id)
+        pendingDeletedListIds.current.delete(id)
       },
     })
   }
@@ -140,6 +165,7 @@ function App() {
 
   async function handleToggleItem(listId: number, item: TodoListItem) {
     const nextCompleted = !item.isCompleted
+    inFlightItemUpdateIds.current.add(item.id)
     setItemsByList((prev) => ({
       ...prev,
       [listId]: (prev[listId] ?? []).map((i) =>
@@ -163,10 +189,13 @@ function App() {
         ),
       }))
       throw e
+    } finally {
+      inFlightItemUpdateIds.current.delete(item.id)
     }
   }
 
   function requestDeleteItem(listId: number, item: TodoListItem) {
+    pendingDeletedItemIds.current.add(item.id)
     setItemsByList((prev) => ({
       ...prev,
       [listId]: (prev[listId] ?? []).filter((i) => i.id !== item.id),
@@ -182,6 +211,8 @@ function App() {
             ...prev,
             [listId]: [...(prev[listId] ?? []), item].sort((a, b) => a.id - b.id),
           }))
+        } finally {
+          pendingDeletedItemIds.current.delete(item.id)
         }
       },
       undo: () => {
@@ -189,9 +220,147 @@ function App() {
           ...prev,
           [listId]: [...(prev[listId] ?? []), item].sort((a, b) => a.id - b.id),
         }))
+        pendingDeletedItemIds.current.delete(item.id)
       },
     })
   }
+
+  const connectionState = useTodoSyncHub({
+    onListChanged: async (entityId, op) => {
+      if (!bootstrappedRef.current) return
+      if (op === OP_DELETE) {
+        setLists((prev) => prev.filter((l) => l.id !== entityId))
+        setItemsByList((prev) => {
+          if (!(entityId in prev)) return prev
+          const next = { ...prev }
+          delete next[entityId]
+          return next
+        })
+        setSelectedId((prev) => (prev === entityId ? null : prev))
+        return
+      }
+      try {
+        const fresh = await api.getLists()
+        setLists((prev) =>
+          mergeLists(
+            prev,
+            fresh,
+            pendingDeletedListIds.current,
+            inFlightListUpdateIds.current,
+          ),
+        )
+        setItemsByList((prev) => {
+          const next = { ...prev }
+          for (const l of fresh) if (!(l.id in next)) next[l.id] = []
+          return next
+        })
+      } catch (e) {
+        console.error('[onListChanged] refetch failed', e)
+      }
+    },
+
+    onItemChanged: async (entityId, op) => {
+      if (!bootstrappedRef.current) return
+
+      if (op === OP_DELETE) {
+        setItemsByList((prev) => {
+          if (pendingDeletedItemIds.current.has(entityId)) return prev
+          const next: Record<number, TodoListItem[]> = {}
+          let mutated = false
+          for (const k of Object.keys(prev)) {
+            const id = Number(k)
+            const before = prev[id]
+            const after = before.filter((i) => i.id !== entityId)
+            if (after.length !== before.length) mutated = true
+            next[id] = after
+          }
+          return mutated ? next : prev
+        })
+        return
+      }
+
+      if (op === OP_UPDATE) {
+        const parentListId = findParentListId(itemsByListRef.current, entityId)
+        if (parentListId !== null) {
+          try {
+            const fresh = await api.getItems(parentListId)
+            setItemsByList((prev) => ({
+              ...prev,
+              [parentListId]: mergeItemsForList(
+                prev[parentListId] ?? [],
+                fresh,
+                pendingDeletedItemIds.current,
+                inFlightItemUpdateIds.current,
+              ),
+            }))
+          } catch (e) {
+            console.error('[onItemChanged] update refetch failed', e)
+          }
+          return
+        }
+      }
+
+      // CREATE, or UPDATE for an unknown-parent item → full refetch.
+      try {
+        const freshLists = await api.getLists()
+        const entries = await Promise.all(
+          freshLists.map(async (l) => [l.id, await api.getItems(l.id)] as const),
+        )
+        const fromServer: Record<number, TodoListItem[]> = {}
+        for (const [id, items] of entries) fromServer[id] = items
+        setLists((prev) =>
+          mergeLists(
+            prev,
+            freshLists,
+            pendingDeletedListIds.current,
+            inFlightListUpdateIds.current,
+          ),
+        )
+        setItemsByList((prev) =>
+          mergeItemsByList(
+            prev,
+            fromServer,
+            pendingDeletedItemIds.current,
+            inFlightItemUpdateIds.current,
+            pendingDeletedListIds.current,
+          ),
+        )
+      } catch (e) {
+        console.error('[onItemChanged] full refetch failed', e)
+      }
+    },
+
+    onResync: async () => {
+      if (!bootstrappedRef.current) return
+      try {
+        const freshLists = await api.getLists()
+        const entries = await Promise.all(
+          freshLists.map(async (l) => [l.id, await api.getItems(l.id)] as const),
+        )
+        const fromServer: Record<number, TodoListItem[]> = {}
+        for (const [id, items] of entries) fromServer[id] = items
+        setLists((prev) =>
+          mergeLists(
+            prev,
+            freshLists,
+            pendingDeletedListIds.current,
+            inFlightListUpdateIds.current,
+          ),
+        )
+        setItemsByList((prev) =>
+          mergeItemsByList(
+            prev,
+            fromServer,
+            pendingDeletedItemIds.current,
+            inFlightItemUpdateIds.current,
+            pendingDeletedListIds.current,
+          ),
+        )
+      } catch (e) {
+        console.error('[onResync] failed', e)
+      }
+    },
+  })
 
   const selectedList = useMemo(
     () => lists.find((l) => l.id === selectedId) ?? null,
@@ -203,7 +372,7 @@ function App() {
     <div className="app-shell">
       <div className="app-grain" aria-hidden />
       <main className="app">
-        <Header />
+        <Header connectionState={connectionState} />
 
         {bootError && (
           <div className="banner banner-error" role="alert">

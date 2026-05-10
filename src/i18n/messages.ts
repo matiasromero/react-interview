@@ -47,6 +47,10 @@ export const messages = {
     'lang.en': 'English',
     'lang.es': 'Spanish',
     'lang.toggleAria': 'Switch to {target}',
+
+    'connection.connected': 'Live · connected',
+    'connection.reconnecting': 'Reconnecting…',
+    'connection.disconnected': 'Offline · changes will sync on reconnect',
   },
   es: {
     'app.title': 'tareas · un lugar tranquilo para planear',
@@ -94,6 +98,10 @@ export const messages = {
     'lang.en': 'Inglés',
     'lang.es': 'Español',
     'lang.toggleAria': 'Cambiar a {target}',
+
+    'connection.connected': 'En vivo · conectado',
+    'connection.reconnecting': 'Reconectando…',
+    'connection.disconnected': 'Sin conexión · se sincronizará al reconectar',
   },
 } as const satisfies Record<Lang, Record<string, string>>
 

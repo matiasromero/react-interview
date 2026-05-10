@@ -1,8 +1,14 @@
 import { useT } from '../i18n/I18nContext'
 import ThemeToggle from './ThemeToggle'
 import LangToggle from './LangToggle'
+import ConnectionIndicator from './ConnectionIndicator'
+import type { ConnectionState } from '../hooks/useTodoSyncHub'
 
-function Header() {
+interface Props {
+  connectionState?: ConnectionState
+}
+
+function Header({ connectionState }: Props) {
   const { formatDate, t } = useT()
   const today = formatDate(new Date())
   return (
@@ -20,6 +26,7 @@ function Header() {
           {today}
         </div>
         <div className="masthead-controls">
+          {connectionState && <ConnectionIndicator state={connectionState} />}
           <ThemeToggle />
           <LangToggle />
         </div>

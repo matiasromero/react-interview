@@ -10,3 +10,14 @@ export interface TodoListItem {
   isCompleted: boolean
   todoListId: number
 }
+
+export type ChangeEntityType = 1 | 2
+export type ChangeOperation = 1 | 2 | 3
+
+export interface ChangeNotification {
+  eventId: number
+  entityType: ChangeEntityType
+  entityId: number
+  operation: ChangeOperation
+  occurredAt: string
+}
